@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-TodoRestApplication<todo-rest>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.azx23034.todo.TodoRestApplication",
+            "projectName": "todo-rest",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-ToDoListApplication<to-do-list>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.azx23034.todo.ToDoListApplication",
+            "projectName": "to-do-list",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
