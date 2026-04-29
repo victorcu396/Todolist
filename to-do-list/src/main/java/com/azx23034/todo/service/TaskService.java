@@ -2,6 +2,7 @@ package com.azx23034.todo.service;
 
 import com.azx23034.todo.dto.CreateTaskRequest;
 import com.azx23034.todo.dto.EditTaskRequest;
+import com.azx23034.todo.dto.TaskStatsDto;
 import com.azx23034.todo.error.TaskNotFoundException;
 import com.azx23034.todo.model.Category;
 import com.azx23034.todo.model.Priority;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 
@@ -24,7 +26,7 @@ public class TaskService {
     private final CategoryRepository categoryRepository;
     private final TagService tagService;
 
-    public List<Task> findAllByUser(User user, Long categoryId, Boolean completed, Priority priority, Boolean starred) {
+    public List<Task> findAllByUser(User user, Long categoryId, Boolean completed, Priority priority, Boolean starred, String search) {
         Sort sort = Sort.by("createdAt").ascending();
         List<Task> result = taskRepository.findByAuthor(user, sort);
 
@@ -36,8 +38,74 @@ public class TaskService {
             result = result.stream().filter(t -> t.getPriority() == priority).toList();
         if (starred != null)
             result = result.stream().filter(t -> t.isStarred() == starred).toList();
+        if (search != null && !search.isBlank()) {
+            String lower = search.toLowerCase();
+            result = result.stream()
+                    .filter(t -> (t.getTitle() != null && t.getTitle().toLowerCase().contains(lower))
+                              || (t.getDescription() != null && t.getDescription().toLowerCase().contains(lower)))
+                    .toList();
+        }
 
         return result;
+    }
+
+    public List<Task> findUpcoming(User user) {
+        LocalDate today = LocalDate.now();
+        LocalDate limit = today.plusDays(7);
+        return taskRepository.findByAuthor(user, Sort.by("deadline").ascending()).stream()
+                .filter(t -> !t.isCompleted()
+                          && t.getDeadline() != null
+                          && !t.getDeadline().isBefore(today)
+                          && !t.getDeadline().isAfter(limit))
+                .toList();
+    }
+
+    public List<Task> findOverdue(User user) {
+        LocalDate today = LocalDate.now();
+        return taskRepository.findByAuthor(user, Sort.by("deadline").ascending()).stream()
+                .filter(t -> !t.isCompleted()
+                          && t.getDeadline() != null
+                          && t.getDeadline().isBefore(today))
+                .toList();
+    }
+
+    public List<Task> bulkComplete(List<Long> ids, User user) {
+        List<Task> tasks = taskRepository.findAllById(ids).stream()
+                .filter(t -> t.getAuthor() != null && t.getAuthor().getId().equals(user.getId()))
+                .toList();
+        tasks.forEach(t -> t.setCompleted(true));
+        return taskRepository.saveAll(tasks);
+    }
+
+    public void bulkDelete(List<Long> ids, User user) {
+        List<Task> tasks = taskRepository.findAllById(ids).stream()
+                .filter(t -> t.getAuthor() != null && t.getAuthor().getId().equals(user.getId()))
+                .toList();
+        taskRepository.deleteAll(tasks);
+    }
+
+    public void deleteCompleted(User user) {
+        List<Task> completed = taskRepository.findByAuthor(user, Sort.unsorted()).stream()
+                .filter(Task::isCompleted)
+                .toList();
+        taskRepository.deleteAll(completed);
+    }
+
+    public TaskStatsDto getStats(User user) {
+        List<Task> all = taskRepository.findByAuthor(user, Sort.unsorted());
+        LocalDate today = LocalDate.now();
+        long completedCount = all.stream().filter(Task::isCompleted).count();
+        long overdueCount = all.stream()
+                .filter(t -> !t.isCompleted() && t.getDeadline() != null && t.getDeadline().isBefore(today))
+                .count();
+        long starredCount = all.stream().filter(Task::isStarred).count();
+        return new TaskStatsDto(all.size(), completedCount, all.size() - completedCount, overdueCount, starredCount);
+    }
+
+    public Task updateOrder(Long id, Integer order) {
+        Task task = findById(id);
+        task.setTaskOrder(order);
+        return taskRepository.save(task);
     }
 
     public List<Task> findAllAdmin() {

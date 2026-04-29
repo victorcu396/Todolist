@@ -1,7 +1,9 @@
 package com.azx23034.todo.controller;
 
+import com.azx23034.todo.dto.BulkTaskIdsDto;
 import com.azx23034.todo.dto.CreateTaskRequest;
 import com.azx23034.todo.dto.EditTaskRequest;
+import com.azx23034.todo.dto.TaskStatsDto;
 import com.azx23034.todo.model.Priority;
 import com.azx23034.todo.model.Task;
 import com.azx23034.todo.model.User;
@@ -15,6 +17,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/tasks")
@@ -29,8 +32,24 @@ public class TaskController {
                                @RequestParam(required = false) Long categoryId,
                                @RequestParam(required = false) Boolean completed,
                                @RequestParam(required = false) Priority priority,
-                               @RequestParam(required = false) Boolean starred) {
-        return taskService.findAllByUser(user, categoryId, completed, priority, starred);
+                               @RequestParam(required = false) Boolean starred,
+                               @RequestParam(required = false) String search) {
+        return taskService.findAllByUser(user, categoryId, completed, priority, starred, search);
+    }
+
+    @GetMapping("/upcoming")
+    public List<Task> upcoming(@AuthenticationPrincipal User user) {
+        return taskService.findUpcoming(user);
+    }
+
+    @GetMapping("/overdue")
+    public List<Task> overdue(@AuthenticationPrincipal User user) {
+        return taskService.findOverdue(user);
+    }
+
+    @GetMapping("/stats")
+    public TaskStatsDto stats(@AuthenticationPrincipal User user) {
+        return taskService.getStats(user);
     }
 
     @PostMapping
@@ -69,6 +88,34 @@ public class TaskController {
         Task task = taskService.findById(id);
         checkOwnership(task, user);
         return taskService.toggleStarred(id);
+    }
+
+    @PatchMapping("/{id}/order")
+    public Task updateOrder(@PathVariable Long id,
+                            @RequestBody Map<String, Integer> body,
+                            @AuthenticationPrincipal User user) {
+        Task task = taskService.findById(id);
+        checkOwnership(task, user);
+        return taskService.updateOrder(id, body.get("order"));
+    }
+
+    @PatchMapping("/bulk/complete")
+    public List<Task> bulkComplete(@Valid @RequestBody BulkTaskIdsDto dto,
+                                   @AuthenticationPrincipal User user) {
+        return taskService.bulkComplete(dto.ids(), user);
+    }
+
+    @DeleteMapping("/bulk")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void bulkDelete(@Valid @RequestBody BulkTaskIdsDto dto,
+                           @AuthenticationPrincipal User user) {
+        taskService.bulkDelete(dto.ids(), user);
+    }
+
+    @DeleteMapping("/completed")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteCompleted(@AuthenticationPrincipal User user) {
+        taskService.deleteCompleted(user);
     }
 
     @DeleteMapping("/{id}")

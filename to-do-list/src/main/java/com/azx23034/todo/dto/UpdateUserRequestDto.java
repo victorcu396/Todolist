@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Size;
 
 public record UpdateUserRequestDto(
 
+        String username,
         String fullname,
 
         @Email(message = "El email no tiene un formato válido")

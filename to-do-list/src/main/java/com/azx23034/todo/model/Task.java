@@ -44,6 +44,8 @@ public class Task {
     @Builder.Default
     private boolean starred = false;
 
+    private Integer taskOrder;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "task_tag",
             joinColumns = @JoinColumn(name = "task_id"),
