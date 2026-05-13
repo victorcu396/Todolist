@@ -592,10 +592,27 @@ async function loadAdminUsers() {
   if (!usuarios) return;
 
   usuarios.forEach(function(user) {
-    const esAdmin   = user.role === "ADMIN";
-    const rolClase  = esAdmin ? "role-admin" : "role-user";
-    const nuevoRol  = esAdmin ? "USER" : "ADMIN";
-    const btnTexto  = esAdmin ? "Quitar admin" : "Hacer admin";
+    const esAdmin  = user.role === "ADMIN";
+    const esGestor = user.role === "GESTOR";
+
+    let rolClase, nuevoRol, btnTexto;
+    if (esAdmin) {
+      rolClase = "role-admin";
+      nuevoRol = null;
+      btnTexto = null;
+    } else if (esGestor) {
+      rolClase = "role-gestor";
+      nuevoRol = "USER";
+      btnTexto = "Quitar gestor";
+    } else {
+      rolClase = "role-user";
+      nuevoRol = "GESTOR";
+      btnTexto = "Hacer gestor";
+    }
+
+    const btnRolHtml = btnTexto
+      ? '<button class="btn btn-sm btn-ghost btn-change-role">' + btnTexto + "</button>"
+      : "";
 
     const tr = document.createElement("tr");
     tr.innerHTML =
@@ -605,13 +622,15 @@ async function loadAdminUsers() {
       "<td>" + escHtml(user.fullname || "—") + "</td>" +
       '<td><span class="role-badge ' + rolClase + '">' + user.role + "</span></td>" +
       '<td><div class="admin-actions">' +
-        '<button class="btn btn-sm btn-ghost btn-change-role">' + btnTexto + "</button>" +
+        btnRolHtml +
         '<button class="btn btn-sm btn-danger btn-del-user">Eliminar</button>' +
       "</div></td>";
 
-    tr.querySelector(".btn-change-role").addEventListener("click", function() {
-      adminChangeRole(user.id, nuevoRol);
-    });
+    if (btnTexto) {
+      tr.querySelector(".btn-change-role").addEventListener("click", function() {
+        adminChangeRole(user.id, nuevoRol);
+      });
+    }
     tr.querySelector(".btn-del-user").addEventListener("click", function() {
       adminDeleteUser(user.id, user.username);
     });

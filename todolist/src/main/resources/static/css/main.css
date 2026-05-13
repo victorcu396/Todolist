@@ -1015,8 +1015,9 @@ img { max-width: 100%; display: block; }
   letter-spacing: 0.03em;
 }
 
-.role-admin { background: #faf5ff; color: #6b46c1; border: 1px solid #d6bcfa; }
-.role-user  { background: #ebf8ff; color: #2b6cb0; border: 1px solid #bee3f8; }
+.role-admin  { background: #faf5ff; color: #6b46c1; border: 1px solid #d6bcfa; }
+.role-user   { background: #ebf8ff; color: #2b6cb0; border: 1px solid #bee3f8; }
+.role-gestor { background: #f0fff4; color: #276749; border: 1px solid #9ae6b4; }
 
 .status-badge {
   display: inline-flex;
