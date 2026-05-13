@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>To-Do List</title>
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="stylesheet" href="/css/main.css" />
+</head>
+<body>
+
+  <!-- LOGIN / REGISTRO -->
+  <div id="login-screen" class="login-screen">
+    <div class="login-box">
+      <img src="/img/logo.svg" alt="Logo" class="login-logo" />
+      <h1>Mis Tareas</h1>
+
+      <!-- Formulario de login -->
+      <div id="panel-login">
+        <p class="login-subtitle">Inicia sesión para continuar</p>
+        <div id="login-error" class="alert-error hidden"></div>
+        <form id="login-form">
+          <div class="form-group">
+            <label for="inp-username">Usuario</label>
+            <input type="text" id="inp-username" placeholder="usuario" autocomplete="username" required />
+          </div>
+          <div class="form-group">
+            <label for="inp-password">Contraseña</label>
+            <input type="password" id="inp-password" placeholder="••••••" autocomplete="current-password" required />
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" id="login-btn">Entrar</button>
+        </form>
+        <p class="login-switch">¿No tienes cuenta? <a href="#" id="link-go-register">Regístrate</a></p>
+        <p class="login-hint">Usuarios de prueba: <strong>user</strong> / <strong>admin</strong> (contraseña: 1234)</p>
+      </div>
+
+      <!-- Formulario de registro -->
+      <div id="panel-register" class="hidden">
+        <p class="login-subtitle">Crea tu cuenta</p>
+        <div id="register-error" class="alert-error hidden"></div>
+        <div id="register-success" class="alert-success hidden"></div>
+        <form id="register-form">
+          <div class="form-group">
+            <label for="reg-username">Usuario <span class="required">*</span></label>
+            <input type="text" id="reg-username" placeholder="minombre" autocomplete="username" required />
+          </div>
+          <div class="form-group">
+            <label for="reg-email">Email <span class="required">*</span></label>
+            <input type="email" id="reg-email" placeholder="correo@ejemplo.com" autocomplete="email" required />
+          </div>
+          <div class="form-group">
+            <label for="reg-fullname">Nombre completo</label>
+            <input type="text" id="reg-fullname" placeholder="Nombre Apellido (opcional)" autocomplete="name" />
+          </div>
+          <div class="form-group">
+            <label for="reg-password">Contraseña <span class="required">*</span></label>
+            <input type="password" id="reg-password" placeholder="mínimo 4 caracteres" autocomplete="new-password" required />
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" id="register-btn">Crear cuenta</button>
+        </form>
+        <p class="login-switch">¿Ya tienes cuenta? <a href="#" id="link-go-login">Inicia sesión</a></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- APP -->
+  <div id="app" class="app hidden">
+
+    <!-- FONDO OSCURO PARA SIDEBAR EN MÓVIL -->
+    <div id="sidebar-backdrop" class="sidebar-backdrop hidden"></div>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <img src="/img/logo.svg" alt="Logo" class="sidebar-logo" />
+        <span class="sidebar-title">Mis Tareas</span>
+      </div>
+
+      <div class="sidebar-user">
+        <div class="user-avatar" id="user-avatar">U</div>
+        <div class="user-info">
+          <span class="user-name" id="user-name">Usuario</span>
+          <span class="user-email" id="user-email">usuario@correo.com</span>
+        </div>
+      </div>
+
+      <div class="sidebar-stats" id="sidebar-stats">
+        <div class="stat-item">
+          <span class="stat-num" id="stat-total">0</span>
+          <span class="stat-label">Total</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num" id="stat-pending">0</span>
+          <span class="stat-label">Pendientes</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num" id="stat-done">0</span>
+          <span class="stat-label">Hechas</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <p class="nav-section-label">Vistas</p>
+        <a class="nav-link active" data-view="all" href="#">
+          <span class="nav-icon">&#9776;</span> Todas
+        </a>
+        <a class="nav-link" data-view="upcoming" href="#">
+          <span class="nav-icon">&#128197;</span> Próximas (7d)
+        </a>
+        <a class="nav-link" data-view="overdue" href="#">
+          <span class="nav-icon">&#9888;</span> Vencidas
+        </a>
+        <a class="nav-link" data-view="starred" href="#">
+          <span class="nav-icon">&#9733;</span> Destacadas
+        </a>
+        <a class="nav-link" data-view="completed" href="#">
+          <span class="nav-icon">&#10003;</span> Completadas
+        </a>
+        <a class="nav-link" data-view="calendar" href="#">
+          <span class="nav-icon">&#128197;</span> Calendario
+        </a>
+
+        <p class="nav-section-label hidden" id="admin-nav-section">Administración</p>
+        <a class="nav-link hidden" data-view="admin" id="nav-admin" href="#">
+          <span class="nav-icon">&#9881;</span> Panel Admin
+        </a>
+
+        <p class="nav-section-label">Categorías</p>
+        <div id="category-list"></div>
+      </nav>
+
+      <button class="btn btn-logout" id="btn-logout">Cerrar sesión</button>
+    </aside>
+
+    <!-- CONTENT -->
+    <main class="main-content">
+      <div class="topbar">
+        <div class="topbar-left">
+          <button class="btn-hamburger" id="btn-sidebar-toggle">&#9776;</button>
+          <h2 id="view-title">Todas las tareas</h2>
+        </div>
+        <div class="topbar-right" id="topbar-right-controls">
+          <input type="text" id="inp-search" placeholder="Buscar tarea..." class="inp-search" />
+          <select id="filter-priority" class="filter-select">
+            <option value="">Prioridad</option>
+            <option value="HIGH">Alta</option>
+            <option value="MEDIUM">Media</option>
+            <option value="LOW">Baja</option>
+          </select>
+          <button class="btn btn-primary" id="btn-new-task">+ Nueva tarea</button>
+        </div>
+      </div>
+
+      <div id="task-list-area">
+        <div id="loading" class="loading hidden">Cargando...</div>
+        <div id="empty-state" class="empty-state hidden">
+          <img src="/img/empty-list.jpg" alt="Sin tareas" />
+          <p>No hay tareas aquí todavía</p>
+        </div>
+        <ul id="task-list" class="task-list"></ul>
+      </div>
+
+      <!-- CALENDARIO -->
+      <div id="calendar-area" class="hidden">
+        <div class="cal-nav">
+          <button class="btn btn-ghost btn-sm" id="cal-prev">&#8592;</button>
+          <span id="cal-month-title" class="cal-month-title"></span>
+          <button class="btn btn-ghost btn-sm" id="cal-next">&#8594;</button>
+        </div>
+        <div class="cal-day-names">
+          <span>Lun</span><span>Mar</span><span>Mié</span>
+          <span>Jue</span><span>Vie</span><span>Sáb</span><span>Dom</span>
+        </div>
+        <div id="calendar-grid" class="cal-grid"></div>
+      </div>
+
+      <!-- ADMIN PANEL -->
+      <div id="admin-area" class="hidden">
+        <div class="admin-tabs">
+          <button class="admin-tab active" id="tab-users">Usuarios</button>
+          <button class="admin-tab" id="tab-tasks">Todas las tareas</button>
+        </div>
+
+        <div id="admin-users-section">
+          <div id="admin-users-loading" class="loading hidden">Cargando usuarios...</div>
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Usuario</th>
+                  <th>Email</th>
+                  <th>Nombre</th>
+                  <th>Rol</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="admin-users-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="admin-tasks-section" class="hidden">
+          <div id="admin-tasks-loading" class="loading hidden">Cargando tareas...</div>
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Título</th>
+                  <th>Usuario</th>
+                  <th>Estado</th>
+                  <th>Prioridad</th>
+                  <th>Vencimiento</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="admin-tasks-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="bulk-bar" class="bulk-bar hidden">
+        <span id="bulk-count">0 seleccionadas</span>
+        <button class="btn btn-sm btn-success" id="btn-bulk-complete">Marcar completadas</button>
+        <button class="btn btn-sm btn-danger" id="btn-bulk-delete">Eliminar seleccionadas</button>
+        <button class="btn btn-sm btn-ghost" id="btn-bulk-cancel">Cancelar</button>
+      </div>
+    </main>
+  </div>
+
+  <!-- MODAL: CREATE / EDIT TASK -->
+  <div id="task-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modal-title">Nueva tarea</h3>
+        <button class="modal-close" id="modal-close">&times;</button>
+      </div>
+      <form id="task-form" novalidate>
+        <input type="hidden" id="task-id" />
+        <div class="form-group">
+          <label for="field-title">Título <span class="required">*</span></label>
+          <input type="text" id="field-title" placeholder="¿Qué hay que hacer?" required />
+        </div>
+        <div class="form-group">
+          <label for="field-desc">Descripción</label>
+          <textarea id="field-desc" rows="3" placeholder="Detalles opcionales..."></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="field-deadline">Fecha límite</label>
+            <input type="date" id="field-deadline" />
+          </div>
+          <div class="form-group">
+            <label for="field-priority">Prioridad</label>
+            <select id="field-priority">
+              <option value="LOW">Baja</option>
+              <option value="MEDIUM" selected>Media</option>
+              <option value="HIGH">Alta</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="field-category">Categoría</label>
+            <select id="field-category">
+              <option value="">Sin categoría</option>
+            </select>
+          </div>
+          <div class="form-group form-check-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="field-starred" />
+              <span>Destacada &#9733;</span>
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="field-tags">Etiquetas <span class="hint">(separadas por coma)</span></label>
+          <input type="text" id="field-tags" placeholder="ej: trabajo, urgente, proyecto" />
+        </div>
+        <div id="form-error" class="alert-error hidden"></div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" id="btn-cancel-modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-task">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>
