@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
+// Extiende CreateTaskRequest añadiendo los campos de solo lectura que la API devuelve al consultar o editar una tarea
 public class EditTaskRequest extends CreateTaskRequest {
 
     private Long id;

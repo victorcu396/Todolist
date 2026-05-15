@@ -4,6 +4,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+// Contiene solo los campos necesarios para el registro, con sus validaciones; el rol lo asigna el sistema, no el cliente
 public record CreateUserRequestDto(
 
         @NotBlank(message = "El nombre de usuario es obligatorio")

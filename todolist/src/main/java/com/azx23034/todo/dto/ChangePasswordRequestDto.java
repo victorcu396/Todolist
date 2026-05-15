@@ -3,6 +3,7 @@ package com.azx23034.todo.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+// Separado del UpdateUserRequestDto porque cambiar la contraseña requiere verificar la actual primero
 public record ChangePasswordRequestDto(
 
         @NotBlank(message = "La contraseña actual es obligatoria")

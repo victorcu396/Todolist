@@ -17,6 +17,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
+// Solo los campos que envía el usuario al crear; evita exponer author, createdAt y demás campos internos de la entidad
 public class CreateTaskRequest {
 
     @NotBlank
