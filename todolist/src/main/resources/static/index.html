@@ -179,6 +179,7 @@
         <div class="admin-tabs">
           <button class="admin-tab active" id="tab-users">Usuarios</button>
           <button class="admin-tab" id="tab-tasks">Todas las tareas</button>
+          <button class="admin-tab" id="tab-categories">Categorías</button>
         </div>
 
         <div id="admin-users-section">
@@ -216,6 +217,25 @@
                 </tr>
               </thead>
               <tbody id="admin-tasks-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="admin-categories-section" class="hidden">
+          <div style="margin-bottom:1rem">
+            <button class="btn btn-primary btn-sm" id="btn-new-category">+ Nueva categoría</button>
+          </div>
+          <div id="admin-categories-loading" class="loading hidden">Cargando categorías...</div>
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="admin-categories-body"></tbody>
             </table>
           </div>
         </div>
@@ -283,6 +303,28 @@
         <div class="modal-actions">
           <button type="button" class="btn btn-ghost" id="btn-cancel-modal">Cancelar</button>
           <button type="submit" class="btn btn-primary" id="btn-save-task">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: CREATE / EDIT CATEGORY -->
+  <div id="category-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="category-modal-title">Nueva categoría</h3>
+        <button class="modal-close" id="category-modal-close">&times;</button>
+      </div>
+      <form id="category-form" novalidate>
+        <input type="hidden" id="category-id" />
+        <div class="form-group">
+          <label for="category-name-field">Nombre <span class="required">*</span></label>
+          <input type="text" id="category-name-field" placeholder="Nombre de la categoría" required />
+        </div>
+        <div id="category-form-error" class="alert-error hidden"></div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" id="btn-cancel-category">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
         </div>
       </form>
     </div>

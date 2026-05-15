@@ -1,18 +1,13 @@
-// URL base de la API
 const API = "";
 
-// Variables globales
-let credentials      = null;   // { username, password }
+let credentials      = null;
 let currentUser      = null;
 let categories       = [];
 let currentView      = "all";  // all | upcoming | overdue | starred | completed | calendar | cat-{id}
 let currentCategoryId = null;
 let selectedTaskIds  = new Set();
 let calYear          = new Date().getFullYear();
-let calMonth         = new Date().getMonth();  // 0 = enero
-
-// ── Peticiones al servidor ───────────────────────────────────────
-// Una sola función para todos los métodos HTTP (GET, POST, PUT, PATCH, DELETE)
+let calMonth         = new Date().getMonth();
 
 async function peticion(metodo, ruta, cuerpo) {
   console.log("→ Petición:", metodo, ruta, cuerpo ?? "");
@@ -35,7 +30,6 @@ async function peticion(metodo, ruta, cuerpo) {
   return respuesta;
 }
 
-// Versión de GET que devuelve directamente el JSON (o null si hay error)
 async function peticionGet(ruta) {
   const respuesta = await peticion("GET", ruta);
   if (!respuesta || !respuesta.ok) return null;
@@ -43,8 +37,6 @@ async function peticionGet(ruta) {
   console.log("   JSON recibido:", datos);
   return datos;
 }
-
-// ── Login / Logout ───────────────────────────────────────────────
 
 async function tryLogin(username, password) {
   const respuesta = await fetch(API + "/auth/me", {
@@ -113,9 +105,13 @@ function showApp() {
   document.getElementById("login-screen").classList.add("hidden");
   document.getElementById("app").classList.remove("hidden");
   renderUserInfo();
-  const esAdmin = currentUser && currentUser.role === "ADMIN";
-  document.getElementById("admin-nav-section").classList.toggle("hidden", !esAdmin);
-  document.getElementById("nav-admin").classList.toggle("hidden", !esAdmin);
+  const esAdmin  = currentUser && currentUser.role === "ADMIN";
+  const esGestor = currentUser && currentUser.role === "GESTOR";
+  document.getElementById("admin-nav-section").classList.toggle("hidden", !esAdmin && !esGestor);
+  document.getElementById("nav-admin").classList.toggle("hidden", !esAdmin && !esGestor);
+  if (esGestor) {
+    document.getElementById("nav-admin").innerHTML = '<span class="nav-icon">&#9881;</span> Panel Gestor';
+  }
   loadCategories();
   loadStats();
   loadTasks();
@@ -128,7 +124,6 @@ function renderUserInfo() {
   document.getElementById("user-avatar").textContent = nombre.charAt(0).toUpperCase();
 }
 
-// ── Estadísticas ─────────────────────────────────────────────────
 
 async function loadStats() {
   const datos = await peticionGet("/tasks/stats");
@@ -138,7 +133,6 @@ async function loadStats() {
   document.getElementById("stat-done").textContent    = datos.completed || 0;
 }
 
-// ── Categorías ───────────────────────────────────────────────────
 
 async function loadCategories() {
   const datos = await peticionGet("/categories");
@@ -177,7 +171,6 @@ function renderCategorySelect() {
   });
 }
 
-// ── Vista activa ─────────────────────────────────────────────────
 
 const VIEW_TITLES = {
   all:       "Todas las tareas",
@@ -221,7 +214,6 @@ function setView(viewKey, catId, catTitle) {
   }
 }
 
-// ── Calendario ───────────────────────────────────────────────────
 
 const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio",
                "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
@@ -233,7 +225,6 @@ async function loadCalendar() {
 }
 
 function renderCalendar(tareas) {
-  // Agrupar tareas por su fecha límite
   const tareasPorFecha = {};
   tareas.forEach(function(tarea) {
     if (tarea.deadline) {
@@ -247,20 +238,17 @@ function renderCalendar(tareas) {
   const grid = document.getElementById("calendar-grid");
   grid.innerHTML = "";
 
-  // Calcular el offset: el primer día del mes en base lunes=0
-  const primerDia  = new Date(calYear, calMonth, 1).getDay(); // 0=Dom, 1=Lun...
+  const primerDia  = new Date(calYear, calMonth, 1).getDay();
   const offset     = primerDia === 0 ? 6 : primerDia - 1;
   const diasDelMes = new Date(calYear, calMonth + 1, 0).getDate();
   const hoyStr     = today();
 
-  // Celdas vacías antes del primer día
   for (let i = 0; i < offset; i++) {
     const vacia = document.createElement("div");
     vacia.className = "cal-cell cal-cell-empty";
     grid.appendChild(vacia);
   }
 
-  // Una celda por cada día del mes
   for (let d = 1; d <= diasDelMes; d++) {
     const fechaStr = calYear + "-"
       + String(calMonth + 1).padStart(2, "0") + "-"
@@ -274,7 +262,6 @@ function renderCalendar(tareas) {
     num.textContent = d;
     celda.appendChild(num);
 
-    // Mostrar las tareas de ese día
     (tareasPorFecha[fechaStr] || []).forEach(function(tarea) {
       const badge = document.createElement("div");
       badge.className = "cal-tarea"
@@ -291,14 +278,12 @@ function renderCalendar(tareas) {
   }
 }
 
-// ── Cargar y mostrar tareas ──────────────────────────────────────
 
 async function loadTasks() {
   document.getElementById("loading").classList.remove("hidden");
   document.getElementById("task-list").innerHTML = "";
   document.getElementById("empty-state").classList.add("hidden");
 
-  // Construir la URL según la vista activa y los filtros
   let ruta;
   const busqueda  = document.getElementById("inp-search").value.trim();
   const prioridad = document.getElementById("filter-priority").value;
@@ -335,7 +320,6 @@ async function loadTasks() {
   loadStats();
 }
 
-// ── Construir tarjeta de tarea ───────────────────────────────────
 
 function buildTaskCard(tarea) {
   const li = document.createElement("li");
@@ -379,7 +363,6 @@ function buildTaskCard(tarea) {
       '<button class="btn-delete">&#10005;</button>' +
     "</div>";
 
-  // Eventos de los botones
   li.querySelector(".btn-toggle").addEventListener("click", function() { toggleTarea(tarea.id); });
   li.querySelector(".btn-star").addEventListener("click",   function() { starTarea(tarea.id);   });
   li.querySelector(".btn-edit").addEventListener("click",   function() { openEditModal(tarea);  });
@@ -394,25 +377,21 @@ function buildTaskCard(tarea) {
   return li;
 }
 
-// Devuelve true si la tarea está vencida (deadline pasado y sin completar)
 function isOverdue(tarea) {
   if (!tarea.deadline || tarea.completed) return false;
   return tarea.deadline < today();
 }
 
-// Devuelve la fecha de hoy en formato YYYY-MM-DD
 function today() {
   return new Date().toISOString().slice(0, 10);
 }
 
-// Convierte "2025-12-31" en "31/12/2025"
 function formatDate(fechaStr) {
   if (!fechaStr) return "";
   const p = fechaStr.split("-");
   return p[2] + "/" + p[1] + "/" + p[0];
 }
 
-// Escapa caracteres HTML para evitar XSS
 function escHtml(str) {
   if (!str) return "";
   return String(str)
@@ -422,7 +401,6 @@ function escHtml(str) {
     .replace(/"/g,  "&quot;");
 }
 
-// ── Acciones sobre tareas ────────────────────────────────────────
 
 async function toggleTarea(id) {
   const res = await peticion("PATCH", "/tasks/" + id + "/toggle");
@@ -440,7 +418,6 @@ async function eliminarTarea(id) {
   if (res && (res.ok || res.status === 204)) await loadTasks();
 }
 
-// ── Modal de crear / editar tarea ────────────────────────────────
 
 function openCreateModal() {
   resetTaskForm();
@@ -478,6 +455,7 @@ function closeTaskModal() {
 
 function resetTaskForm() {
   document.getElementById("task-form").reset();
+  document.getElementById("task-id").value = "";
   document.getElementById("form-error").classList.add("hidden");
 }
 
@@ -507,7 +485,6 @@ async function saveTask(e) {
 
   document.getElementById("btn-save-task").disabled = true;
 
-  // Si hay ID es edición (PUT), si no es creación (POST)
   const metodo = id ? "PUT"        : "POST";
   const ruta   = id ? "/tasks/" + id : "/tasks";
   const res    = await peticion(metodo, ruta, cuerpo);
@@ -533,7 +510,6 @@ async function saveTask(e) {
   }
 }
 
-// ── Selección múltiple (bulk) ────────────────────────────────────
 
 function updateBulkBar() {
   const bar = document.getElementById("bulk-bar");
@@ -566,19 +542,24 @@ async function bulkDelete() {
   if (res && (res.ok || res.status === 204)) { clearSelection(); await loadTasks(); }
 }
 
-// ── Panel de administración ──────────────────────────────────────
 
 function loadAdminPanel() {
-  showAdminTab("users");
+  const esGestor = currentUser && currentUser.role === "GESTOR";
+  document.getElementById("tab-users").classList.toggle("hidden", esGestor);
+  document.getElementById("tab-tasks").classList.toggle("hidden", esGestor);
+  showAdminTab(esGestor ? "categories" : "users");
 }
 
 function showAdminTab(tab) {
   document.getElementById("tab-users").classList.toggle("active", tab === "users");
   document.getElementById("tab-tasks").classList.toggle("active", tab === "tasks");
+  document.getElementById("tab-categories").classList.toggle("active", tab === "categories");
   document.getElementById("admin-users-section").classList.toggle("hidden", tab !== "users");
   document.getElementById("admin-tasks-section").classList.toggle("hidden", tab !== "tasks");
+  document.getElementById("admin-categories-section").classList.toggle("hidden", tab !== "categories");
   if (tab === "users") loadAdminUsers();
-  else loadAdminTasks();
+  else if (tab === "tasks") loadAdminTasks();
+  else loadAdminCategories();
 }
 
 async function loadAdminUsers() {
@@ -693,7 +674,91 @@ async function adminDeleteTask(id, titulo) {
   if (res && (res.ok || res.status === 204)) loadAdminTasks();
 }
 
-// ── Sidebar móvil ────────────────────────────────────────────────
+
+function categoryApiBase() {
+  return currentUser.role === "ADMIN" ? "/admin/categories" : "/gestor/categories";
+}
+
+async function loadAdminCategories() {
+  const loadingEl = document.getElementById("admin-categories-loading");
+  const tbody     = document.getElementById("admin-categories-body");
+  loadingEl.classList.remove("hidden");
+  tbody.innerHTML = "";
+
+  const cats = await peticionGet(categoryApiBase());
+  loadingEl.classList.add("hidden");
+  if (!cats) return;
+
+  cats.forEach(function(cat) {
+    const tr = document.createElement("tr");
+    tr.innerHTML =
+      "<td>" + cat.id + "</td>" +
+      "<td>" + escHtml(cat.title) + "</td>" +
+      '<td><div class="admin-actions">' +
+        '<button class="btn btn-sm btn-ghost btn-edit-cat">Editar</button>' +
+        '<button class="btn btn-sm btn-danger btn-del-cat">Eliminar</button>' +
+      "</div></td>";
+
+    tr.querySelector(".btn-edit-cat").addEventListener("click", function() {
+      openCategoryModal(cat);
+    });
+    tr.querySelector(".btn-del-cat").addEventListener("click", function() {
+      adminDeleteCategory(cat.id, cat.title);
+    });
+
+    tbody.appendChild(tr);
+  });
+}
+
+function openCategoryModal(cat) {
+  document.getElementById("category-id").value = cat ? cat.id : "";
+  document.getElementById("category-name-field").value = cat ? cat.title : "";
+  document.getElementById("category-modal-title").textContent = cat ? "Editar categoría" : "Nueva categoría";
+  document.getElementById("category-form-error").classList.add("hidden");
+  document.getElementById("category-modal").classList.remove("hidden");
+  document.getElementById("category-name-field").focus();
+}
+
+function closeCategoryModal() {
+  document.getElementById("category-modal").classList.add("hidden");
+}
+
+async function saveCategoryModal(e) {
+  e.preventDefault();
+  const id      = document.getElementById("category-id").value;
+  const title   = document.getElementById("category-name-field").value.trim();
+  const errorEl = document.getElementById("category-form-error");
+
+  if (!title) {
+    errorEl.textContent = "El nombre es obligatorio.";
+    errorEl.classList.remove("hidden");
+    return;
+  }
+
+  const base = categoryApiBase();
+  const res = id
+    ? await peticion("PUT", base + "/" + id, { title })
+    : await peticion("POST", base, { title });
+
+  if (res && (res.ok || res.status === 201)) {
+    closeCategoryModal();
+    loadAdminCategories();
+    loadCategories();
+  } else {
+    errorEl.textContent = "Error al guardar la categoría.";
+    errorEl.classList.remove("hidden");
+  }
+}
+
+async function adminDeleteCategory(id, title) {
+  if (!confirm("¿Eliminar la categoría «" + title + "»? Las tareas se moverán a Main.")) return;
+  const res = await peticion("DELETE", categoryApiBase() + "/" + id);
+  if (res && (res.ok || res.status === 204)) {
+    loadAdminCategories();
+    loadCategories();
+  }
+}
+
 
 function toggleSidebar() {
   document.querySelector(".sidebar").classList.toggle("sidebar-open");
@@ -705,7 +770,6 @@ function closeSidebar() {
   document.getElementById("sidebar-backdrop").classList.add("hidden");
 }
 
-// ── Inicio: comprobar sesión guardada ────────────────────────────
 
 async function init() {
   const guardado = sessionStorage.getItem("creds");
@@ -717,7 +781,6 @@ async function init() {
   showLogin();
 }
 
-// ── Eventos ──────────────────────────────────────────────────────
 
 document.getElementById("login-form").addEventListener("submit", async function(e) {
   e.preventDefault();
@@ -793,13 +856,11 @@ document.getElementById("task-form").addEventListener("submit", saveTask);
 document.getElementById("modal-close").addEventListener("click", closeTaskModal);
 document.getElementById("btn-cancel-modal").addEventListener("click", closeTaskModal);
 
-// Buscar al pulsar Enter en el campo de búsqueda
 document.getElementById("inp-search").addEventListener("keydown", function(e) {
   if (e.key === "Enter") loadTasks();
 });
 document.getElementById("filter-priority").addEventListener("change", function() { loadTasks(); });
 
-// Navegación del sidebar
 document.querySelectorAll(".nav-link[data-view]").forEach(function(a) {
   a.addEventListener("click", function(e) {
     e.preventDefault();
@@ -812,7 +873,6 @@ document.querySelectorAll(".nav-link[data-view]").forEach(function(a) {
   });
 });
 
-// Navegación del calendario
 document.getElementById("cal-prev").addEventListener("click", function() {
   calMonth--;
   if (calMonth < 0) { calMonth = 11; calYear--; }
@@ -825,16 +885,22 @@ document.getElementById("cal-next").addEventListener("click", function() {
   loadCalendar();
 });
 
-// Pestañas del panel admin
 document.getElementById("tab-users").addEventListener("click", function() { showAdminTab("users"); });
 document.getElementById("tab-tasks").addEventListener("click", function() { showAdminTab("tasks"); });
+document.getElementById("tab-categories").addEventListener("click", function() { showAdminTab("categories"); });
 
-// Acciones de selección múltiple
+document.getElementById("btn-new-category").addEventListener("click", function() { openCategoryModal(null); });
+document.getElementById("category-form").addEventListener("submit", saveCategoryModal);
+document.getElementById("category-modal-close").addEventListener("click", closeCategoryModal);
+document.getElementById("btn-cancel-category").addEventListener("click", closeCategoryModal);
+document.getElementById("category-modal").addEventListener("click", function(e) {
+  if (e.target === this) closeCategoryModal();
+});
+
 document.getElementById("btn-bulk-complete").addEventListener("click", bulkComplete);
 document.getElementById("btn-bulk-delete").addEventListener("click", bulkDelete);
 document.getElementById("btn-bulk-cancel").addEventListener("click", clearSelection);
 
-// Cerrar modal al hacer clic fuera o pulsar Escape
 document.getElementById("task-modal").addEventListener("click", function(e) {
   if (e.target === this) closeTaskModal();
 });

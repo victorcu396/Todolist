@@ -39,6 +39,7 @@ public class User implements UserDetails {
     private String fullname;
 
     @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "varchar(50)")
     @Builder.Default
     private UserRole role = UserRole.USER;
 

@@ -38,7 +38,8 @@ public class DataSeed {
         User user = userService.register(new CreateUserRequestDto("user", "user@user.com", "1234", "Usuario Normal"));
 
         User admin = userService.register(new CreateUserRequestDto("admin", "admin@admin.com", "1234", "Administrador"));
-        userService.changeRole(admin.getId(), UserRole.ADMIN);
+        admin.setRole(UserRole.ADMIN);
+        userRepository.save(admin);
 
         return user;
     }
